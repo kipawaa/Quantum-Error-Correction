@@ -1,0 +1,299 @@
+\documentclass{article}
+
+\usepackage{kip-math, kip-quantum, mathtools, array}
+\usepackage{geometry, enumerate}
+\usepackage[backend=biber]{biblatex}
+\usepackage{graphicx, caption, subcaption}
+\usepackage{bookmark}
+
+\addbibresource{../sources.bib}
+
+\title{Quantum Error Correction with Stabilizer Codes}
+\author{River McCubbin}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Abstract}
+
+Quantum computing in the modern sense originates around 1980, with a number of important theoretical results published between 1985 and 2000.
+These results, such as Shor's algorithm for integer factorization, and Grover's search algorithm provide significant speedups from their classical counterparts.
+Since then, the difficulty has been to construct a quantum computer sufficiently large to use the algorithms in practice.
+One key factor to enabling these algorithms is to adequately correct errors that accumulate during quantum computation.
+
+This report presents stabilizer codes - quantum error correcting codes based in subspace correction.
+We discuss bit-flip and phase flip errors, justify that correcting these errors is sufficient for correcting arbitray errors, and provide codes capable of correcting each of these.
+Finally, we discuss the practical considerations of these codes and their scalability.
+
+\section{Quantum Computing}
+
+        Classical computing is built from a foundation of bits and logic gates.
+        We use bits to represent data, and gates to manipulate that data in order to reach conclusions.
+        The systems of quantum computing are quite similar.
+        We represent data via qubits:
+
+        \begin{definition}[Qubit]
+                A \textit{qubit} is a unit vector $\ket{\psi} \in \bb{C}^2$.
+        \end{definition}
+
+        We can more accurately describe an arbitrary qubit with reference to the computational basis:
+        
+        \begin{notation}[Computational Basis]
+                The \textit{computational basis} of $\bb{C}^n$ is denoted $\{\ket{0}, \dots, \ket{n-1}\}$ where
+                        $$\ket{i} = \begin{bmatrix} 0 & \dots & 0 & 1 & 0 & \dots & 0 \end{bmatrix}^T$$
+                with a 1 in the $i-1$th position and 0 elsewhere.\\
+                Note: Sometimes we write $\ket{3}$ to represent the 4th basis vector, but we often write $\ket{11}$ to represent the fourth basis vector in binary instead.
+        \end{notation}
+        For example the computational basis of $\bb{C}^2$ is given by
+        \begin{align*}
+        \ket{0} &= \begin{bmatrix} 1 \\ 0 \end{bmatrix} & \ket{1} &= \begin{bmatrix} 0 \\ 1 \end{bmatrix}
+        \end{align*}
+
+        With this basis we can represent an arbitrary qubit as a linear combination of these coefficients:
+                $$\ket{\psi} = \alpha \ket{0} + \beta \ket{1}.$$
+
+        While a single qubit is useful, in order to represent more complex data we'll need a way to combine multiple qubits.
+        This is done via the tensor product:
+
+        \begin{definition}[Tensor]
+                The tensor product of vectors (not necessarily single qubits) $\ket{\psi} \in \bb{C}^m, \ket{\phi} \in \bb{C}^n$ is denoted
+                        $$\ket{\psi} \tensor \ket{\phi} \in \bb{C}^{mn}.$$
+                It is a bilinear map $\tensor : \bb{C}^m \tensor \bb{C}^n \to \bb{C}^{mn}$, i.e.
+                $$(\alpha \ket{\psi}) \tensor \ket{\phi} = \alpha (\ket{\psi} \tensor \ket{\phi}) = \ket{\psi} \tensor (\alpha \ket{\phi})$$
+                $$(\ket{\psi} + \ket{\phi}) \tensor \ket{\gamma} = \ket{\psi} \tensor \ket{\gamma} + \ket{\phi} \tensor \ket{\gamma}$$
+                and
+                $$\ket{\psi} \tensor \ket{\phi} = \ket{\phi} \tensor \ket{\psi}.$$
+        \end{definition}
+
+        Since the tensor product is a bilinear map, we can specify its action on the basis elements, which defines the action on the entire space by linearity.
+        For example the tensor of basis elements of $\bb{C}^2$ provides a basis for $\bb{C}^4$:
+        \begin{align*}
+        \ket{0} \tensor \ket{0} &=: \ket{00} & \ket{0} \tensor \ket{1} &=: \ket{01}\\
+        \ket{1} \tensor \ket{0} &=: \ket{10} & \ket{1} \tensor \ket{1} &=: \ket{11}
+        \end{align*}
+        Referring back, we can see that this is the notation for the computational basis of $\bb{C}^4$.
+
+        With this method of representing data, we move on to operations that can be applied to the data.
+        As mentioned previously, classical computing operations consist of combinations of logical gates.
+        The quantum analogue of these gates are called quantum gates, and are modelled mathematically by unitary operators:
+
+        \begin{definition}[Unitary Operator]
+                A \textit{unitary operator} $U$ is a linear operator that satisfies
+                        $$U^* U = UU^* = I$$
+                where $U^*$ denotes the adjoint (conjugate transpose in our context) of $U$.
+        \end{definition}
+
+        For example, the quantum NOT gate is denoted $X$ and acts by
+        \begin{align*}
+                X \ket{0} &= \ket{1} & X \ket{1} &= \ket{0}
+        \end{align*}
+        Notice that since these are linear operators on a vector space with a specified basis, there exist matrix representations for these operators.
+        Continuing with the $X$ gate example, we have matrix representation
+        \begin{align*}
+        X &= \begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}
+        \end{align*}
+        which allows us to very simply check that $X = X^*$ and hence $XX^* = X^* X = X^2 = I$.
+
+        Notice that since quantum gates are linear operators, they are determined by their action on the basis elements and hence we typically specify only this.
+        Other common quantum gates are listed in the \hyperref[appendix]{Appendix}.
+        Before continuing, a reader should be familiar with the $Z$ gate and the $\CNOT$ gate at the very least.
+        
+        Similarly to the way we combined qubits with the tensor product, we can combine operators with the tensor product as well.
+        For example, if we want to apply an $X$ gate to the second qubit only, we can apply $I \tensor X$:
+        \begin{align*}
+        (I \tensor X)(\ket{0} \tensor \ket{0}) &= I \ket{0} \tensor X \ket{0}\\
+        &= \ket{0} \tensor \ket{1}
+        \end{align*}
+        Some gates are representable as a tensor product of single qubit gates, but some are not representible in this way.
+        One example of this is the $\CNOT$ (controlled-not) gate.
+
+        Though an arbitrary gate may not be a pure tensor product of single qubit gates, it must be a linear combination of $I, X, Z, XZ$ gates.
+        These gates form a basis for the space of single qubit operators, and hence linear combinations of their tensors forms a basis for any space of $n$-qubit gates.
+        This will be a key observation that informs how we approach error correction.
+
+\section{Quantum Error}
+
+        In classical computation, errors can occur only as ``bit-flips.''
+        In quantum computing, there is an analagous error:
+        \begin{definition}[Bit-Flip Error]
+                A \textit{bit-flip error} on a general qubit $\ket{\psi}$ is given by
+                \begin{align*}
+                X \ket{\psi} &= X(\alpha \ket{0} + \beta \ket{1})\\
+                &= \alpha X \ket{0} + \beta X \ket{1}\\
+                &= \alpha \ket{1} + \beta \ket{0}
+                \end{align*}
+        \end{definition}
+
+        Unfortunately, this is not the only type of error in quantum computing.
+        The second type of error is the phase flip error:
+        \begin{definition}[Phase Flip Error]
+                A \textit{phase flip error} on a general qubit $\ket{\psi}$ is given by
+                \begin{align*}
+                Z \ket{\psi} &= Z(\alpha \ket{0} + \beta \ket{1})\\
+                &= \alpha Z \ket{0} + \beta Z \ket{1}\\
+                &= \alpha \ket{0} - \beta \ket{1}
+                \end{align*}
+        \end{definition}
+
+        An arbitrary error in quantum computing may appear different from these.
+        Since any interaction with a quantum state can be modelled by applications of unitary operators, for which $I, X, Z$ form a basis, it is possible to represent an arbitrary error as a linear combination of these errors.
+        Hence any error can be corrected by correcting bit and phase flip errors \cite{Nielsen}.
+
+        In addition to two types of errors, there is an additional challenge to quantum error correction.
+        \begin{theorem}[No Cloning Theorem]
+                There does not exist a unitary operator $U$ such that
+                        $$U (\ket{\psi} \tensor \ket{0}) = \ket{\psi} \tensor \ket{\psi}.$$
+        \end{theorem}
+        This was shown by James Park in 1970 \cite{Park}.
+        This means that classical techniques that involve the duplication of data (Ex. repetition codes) are not possible to implement in a quantum setting.
+
+
+\section{Stabilizer Codes}
+
+        With the types of errors we could encounter identified we can now look for methods of detecting and correcting these errors.
+        The primary approach to quantum error correction is via stabilizer codes.
+        These codes are in a sense the quantum analogue of the repetition code, aiming to preserve quantum information by sharing it across multiple qubits, whose errors can be individually corrected in order to reconstruct the original state.
+        The name ``stabilizer'' comes from viewing the set of possible errors as a group generated by products of the $X, Z$ Pauli gates.
+        The subgroup that stabilizes the codespace $\cal{C} = \spanset\{\ket{0^n}, \ket{1^n}\}$ defines the set of encoding and decoding operations.
+
+        \subsection{Bit-Flip Code}
+
+                The following circuit demonstrates the bit-flip code, which is capable of correcting 1 bit-flip error
+                \begin{center}
+                \begin{quantikz}
+                \ket{\psi} & \ctrl{1} \gategroup[3,steps=2,style={dashed,rounded corners}]{{Encode}} & \ctrl{2} & \gate[3]{Channel} & \ctrl{1} \gategroup[3,steps=2,style={dashed,rounded corners}]{{Syndrome}} & \ctrl{2} & & \gate{X} \gategroup[3,style={dashed,rounded corners}]{{Decode}}  \\
+                \ket{0} & \gate{X} & & & \gate{X} & & & \ctrl{-1} \\
+                \ket{0} & & \gate{X} & & & \gate{X} & & \ctrl{-2}
+                \end{quantikz}
+                \end{center}
+
+                The Encode segment of the above circuit takes an arbitrary state
+                        $$\ket{\psi} = \alpha \ket{0} + \beta \ket{1}$$
+                to the state 
+                        $$\alpha \ket{000} + \beta \ket{111}.$$
+                In the same way that a classical code shares information across additional bits, this shares the quantum information from the original state across three qubits.
+
+                After encoding, the state is sent through the channel which may introduce bit flip errors.
+                We assume that the likelihood of more than one bit flip is negligible and analyze only the cases with 0 or 1 errors.
+
+                We then detect the syndrome of the resulting state.
+                We can examine the state by cases:
+                $$\begin{array}{|c|c|c|c|}
+                \hline
+                \text{Channel} & \text{State After Channel} & \text{State After Syndrome} & \text{Syndrome}\\
+                \hline
+                I \tensor I \tensor I & \alpha \ket{000} + \beta \ket{111} & \alpha \ket{000} + \beta \ket{100} & 00\\
+                \hline
+                X \tensor I \tensor I & \alpha \ket{100} + \beta \ket{011} & \alpha \ket{111} + \beta \ket{011} & 11\\
+                \hline
+                I \tensor X \tensor I & \alpha \ket{010} + \beta \ket{101} & \alpha \ket{010} + \beta \ket{110} & 10\\
+                \hline
+                I \tensor I \tensor X & \alpha \ket{001} + \beta \ket{110} & \alpha \ket{001} + \beta \ket{101} & 01\\
+                \hline
+                \end{array}
+                $$
+                The syndromes here are simply the states of the second and third qubits after applying the syndrome circuit.
+                
+                
+                We can then use these syndromes to determine the necessary correction.
+                We have accurately detected errors in each state with non-zero syndrome.
+                Notice though that only the state with syndrome 11 requires correction; in each other state we have that the first qubit (i.e. the state we wished to preserve) is in the correct state $\alpha \ket{0} + \beta \ket{1}$.
+                Hence we decode by applying a doubly-controlled $X$ gate to the first qubit.
+                This ensures that we return to the original state of the first qubit: if the syndrome is 11 then we apply the $X$ gate, resulting in the state
+                        $$\alpha \ket{011} + \beta \ket{111}$$
+                and in every other case nothing is done.
+                After applying this operation the first qubit has returned to the sent state, and the second and third qubits match with both coefficients, and hence we can factor the state as
+                        $$(\alpha \ket{0} + \beta \ket{1}) \tensor \ket{q_2 q_3},$$
+                recovering our original state, as wanted.
+                
+
+        \subsection{Phase-Flip Code}
+
+                Having corrected a bit-flip error, we continue with the phase-flip error.
+                Luckily, the method for correcting a phase-flip error is informed by our success with bit-flip errors.
+                We find that the following circuit successfully corrects up to 1 phase-flip error:
+                \begin{center}
+                \begin{quantikz}
+                \ket{\psi} & \ctrl{1} \gategroup[3,steps=3,style={dashed,rounded corners}]{{Encode}} & \ctrl{2} & \gate{H} & \gate[3]{Channel} & \gate{H}\gategroup[3,steps=3,style={dashed,rounded corners}]{{Syndrome}} & \ctrl{1} & \ctrl{2} & & \gate{X} \gategroup[3,style={dashed,rounded corners}]{{Decode}}  \\
+                \ket{0} & \gate{X} & & \gate{H} & & \gate{H} & \gate{X} & & & \ctrl{-1} \\
+                \ket{0} & & \gate{X} & \gate{H} & & \gate{H} & & \gate{X} & & \ctrl{-2}
+                \end{quantikz}
+                \end{center}
+                The key here is the application of the Hadamard gate and the identity $HZH = X$.
+                If a phase-flip error occurs in the channel, then the Hadamard gates applied on either side of the channel allow us to correct this phase flip error as though it were a bit-flip error.
+                At the same time, if no error occurs then we have $HH = I$, leaving the state unchanged.
+
+        \subsection{Shor Code}
+                
+                We can effectively combine the bit-flip code and the phase-flip code in order to correct an arbitrary error.
+                The following code that accomplishes this was the first of its kind, and was introduced by Peter Shor in 1995 \cite{Shor}.
+                The code is shown below as a quantum circuit:
+                \begin{center}
+                \begin{quantikz}
+
+                % First Block
+                \ket{\psi}      & \ctrl[style={draw=blue}]{3}   & \ctrl[style={draw=blue}]{6}   & \gate[style={draw=blue}]{H}   & \ctrl[style={draw=red}]{1}    & \ctrl[style={draw=red}]{2}    & \gate[9]{Channel} 
+                                & \ctrl[style={draw=red}]{1}    & \ctrl[style={draw=red}]{2}    & \gate[style={draw=red}]{X}    & \gate[style={draw=blue}]{H}   & \ctrl[style={draw=blue}]{3}   & \ctrl[style={draw=blue}]{6}   & \gate[style={draw=blue}]{X} \\
+                
+                \ket{0}         &                               &                               &                               & \gate[style={draw=red}]{X}    &                               &
+                                & \gate[style={draw=red}]{X}    &                               & \ctrl[style={draw=red}]{-1}   &                               &                               &                               &\\ 
+
+                \ket{0}         &                               &                               &                               &                               & \gate[style={draw=red}]{X}    &
+                                &                               & \gate[style={draw=red}]{X}    & \ctrl[style={draw=red}]{-2}   &                               &                               &                               &\\ 
+
+                % Second Block
+                \ket{0}         & \gate[style={draw=blue}]{X}   &                               & \gate[style={draw=blue}]{H}   & \ctrl[style={draw=red}]{1}    & \ctrl[style={draw=red}]{2}    &
+                                & \ctrl[style={draw=red}]{1}    & \ctrl[style={draw=red}]{2}    & \gate[style={draw=red}]{X}    & \gate[style={draw=blue}]{H}   & \gate[style={draw=blue}]{X}   &                               & \ctrl[style={draw=blue}]{-3}\\ 
+                \ket{0}         &                               &                               &                               & \gate[style={draw=red}]{X}    &                               &
+                                & \gate[style={draw=red}]{X}    &                               & \ctrl[style={draw=red}]{-1}   &                               &                               &                               &\\ 
+                \ket{0}         &                               &                               &                               &                               & \gate[style={draw=red}]{X}    &
+                                &                               & \gate[style={draw=red}]{X}    & \ctrl[style={draw=red}]{-2}   &                               &                               &                               & \\ 
+
+                % Third Block
+                \ket{0}         &                               & \gate[style={draw=blue}]{X}   & \gate[style={draw=blue}]{H}   & \ctrl[style={draw=red}]{1}    & \ctrl[style={draw=red}]{2}    &
+                                & \ctrl[style={draw=red}]{1}    & \ctrl[style={draw=red}]{2}    & \gate[style={draw=red}]{X}    & \gate[style={draw=blue}]{H}   &                               & \gate[style={draw=blue}]{X}   & \ctrl[style={draw=blue}]{-6}\\ 
+                \ket{0}         &                               &                               &                               & \gate[style={draw=red}]{X}    &                               &
+                                & \gate[style={draw=red}]{X}    &                               & \ctrl[style={draw=red}]{-1}   &                               &                               &                               &\\ 
+                \ket{0}         &                               &                               &                               &                               & \gate[style={draw=red}]{X}    &
+                                &                               & \gate[style={draw=red}]{X}    & \ctrl[style={draw=red}]{-2}   &                               &                               &                               &
+                \end{quantikz}
+                \end{center}
+                Notice that this acts as a sort of composition of the bit-flip and phase-flip codes: each block of three qubits implements the bit-flip code (red), and every third qubit implements the phase-flip code (blue).
+                In this way, a single arbitrary error can be corrected by the Shor code.
+
+\section{Conclusion}
+        
+        With the increasing promise of practical quantum computation, the need for more effective quantum error correcting techniques is growing.
+        Stabilizer codes provide the foundation for future work on quantum error correction, allowing the correction of arbitrary errors at the cost of a number of additional qubits.
+        The challenges moving forward will be to increase the efficiency of these codes, reducing the number of additional qubits necessary to correct.
+
+
+\newpage
+\section{Bibliography}
+        \nocite{*}
+        \printbibliography
+
+\newpage
+\section{Appendix}\label{appendix}
+
+        \subsection{Common Quantum Gates}
+        \newcommand{\T}[1]{\rule{0pt}{#1ex}}
+        \newcommand{\B}[1]{\rule[#1ex]{0pt}{0pt}}
+        \begin{tabular}{|c|c|c|c|}
+        \hline
+        Gate & Matrix & Action on zero state(s) & Action on 1 state(s)\\
+        \hline
+        $X$ & $\begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$ & $X\ket{0} = \ket{1}$ & $X \ket{1} = \ket{0}$ \T{4}\B{-3}\\
+        \hline
+        $Y$ & $\begin{bmatrix} 0 & -i \\ i & 0\end{bmatrix}$ & $Y\ket{0} = i\ket{1}$ & $Y \ket{1} = -i\ket{0}$ \T{4}\B{-3}\\
+        \hline
+        $Z$ & $\begin{bmatrix} 1 & 0 \\ 0 & -1 \end{bmatrix}$ & $Z\ket{0} = \ket{0}$ & $Z\ket{1} = -\ket{1}$ \T{4}\B{-3}\\
+        \hline
+        $H$ & $\frac{1}{\sqrt{2}} \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix}$ & $H\ket{0} = \ket{+} := \frac{1}{\sqrt{2}} (\ket{0} + \ket{1})$ & $H \ket{1} = \ket{-} := \frac{1}{\sqrt{2}} (\ket{0} - \ket{1})$\T{4}\B{-3}\\
+        \hline
+        $\CNOT$ & $\begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 1 & 0 \end{bmatrix}$ & {$\begin{aligned} \CNOT \ket{00} = \ket{01} \\ \CNOT \ket{01} = \ket{01}\end{aligned}$} & {$\begin{aligned} \CNOT \ket{10} = \ket{11} \\ \CNOT \ket{11} = \ket{10} \end{aligned}$} \T{7}\B{-6}\\
+        \hline
+        \end{tabular}
+
+\end{document}

@@ -1,0 +1,172 @@
+\documentclass[notheorems]{beamer}
+
+\usepackage{kip-math, kip-quantum, mathtools}
+\usepackage[backend=biber]{biblatex}
+\usepackage{geometry, enumerate, hyperref}
+\usepackage{graphicx, caption, subcaption}
+\usepackage{bookmark}
+
+\addbibresource{../sources.bib}
+
+\title{Quantum Error Correction and Stabilizer Codes}
+\author{River McCubbin}
+\date{\today}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}
+\frametitle{Overview}
+\begin{enumerate}
+\item Quantum Computing \pause
+\item Quantum Errors \pause
+\item Quantum Error Correction
+\end{enumerate}
+\end{frame}
+
+\begin{frame}
+\frametitle{Quantum Computing}
+\begin{center}
+\begin{tabular}{c|c|c}
+& Data & Operations\\
+\hline
+Classical & Bits & Gates\\
+\hline
+Quantum & Vectors & (Unitary) Operators
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Quantum States}
+Qubits:
+$$\ket{\psi} = \alpha \ket{0} + \beta \ket{1}$$
+where
+\begin{align*}
+\ket{0} &= \begin{bmatrix} 1 \\ 0 \end{bmatrix} & \ket{1} &= \begin{bmatrix} 0 \\ 1 \end{bmatrix}
+\end{align*}
+unit vectors in $\bb{C}^2$, i.e. $\alpha^2 + \beta^2 = 1$.
+\end{frame}
+
+\begin{frame}
+\frametitle{Quantum Operations}
+Quantum Gates (Unitary Operators):
+        $$ U(\ket{\psi}) = \alpha U \ket{0} + \beta U \ket{1}$$
+such that
+        $$U^*U = UU^* = I$$
+in $M_2(\bb{C})$.
+\end{frame}
+
+\begin{frame}
+\frametitle{(Complex) Tensors}
+$\ket{\psi}, \ket{\phi}, \ket{\gamma} \in \bb{C}^2$:\\ \pause
+bilinear: 
+        \begin{align*}
+        (a \ket{\phi}) \tensor \ket{\psi} &= a ( \ket{\phi} \tensor \ket{\psi}) = \ket{\phi} \tensor (a \ket{\psi})\\
+        (\ket{\phi} + \ket{\psi}) \tensor \ket{\gamma} &= \ket{\phi} \tensor \ket{\gamma} + \ket{\psi} \tensor \ket{\gamma}
+        \end{align*} \pause
+symmetric: $\ket{\phi} \tensor \ket{\psi} = \ket{\psi} \tensor \ket{\phi}$
+\end{frame}
+
+\begin{frame}
+\frametitle{Tensor Example}
+$\ket{\psi} = \alpha \ket{0} + \beta \ket{1}$,\\
+$\ket{\phi} = a \ket{0} + b \ket{1}$,\pause
+\begin{align*}
+\ket{\psi} \tensor \ket{\phi} 
+&= (\alpha \ket{0} + \beta \ket{1}) \tensor (a \ket{0} + b \ket{1})\\ 
+&= \alpha \ket{0} \tensor a \ket{0} + \alpha \ket{0} \tensor b \ket{1} + \beta \ket{1} \tensor a \ket{0} + \beta \ket{1} \tensor b \ket{1}\\ 
+&= a \alpha \ket{00} + b \alpha \ket{01} + a \beta \ket{10} + b \beta \ket{11} 
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Multi-Qubit Gates}
+\begin{itemize}
+\item Tensors of single-qubit gates $X \tensor X, I \tensor X$ \pause
+\item Other: $\CNOT, \SWAP$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Common Gates}
+\begin{align*}
+X \ket{0} &= \ket{1} & X \ket{1} &= \ket{0}\\
+Z \ket{0} &= \ket{0} & Z \ket{1} &= -\ket{1}\\
+H \ket{0} &= \ket{+} & H \ket{1} &= \ket{-}\\ 
+\CNOT \ket{00} &= \ket{00} & \CNOT \ket{01} &= \ket{01}\\
+\CNOT \ket{10} &= \ket{11} & \CNOT \ket{11} &= \ket{10}
+\end{align*}
+where 
+\begin{align*}
+\ket{+} &= \frac{1}{\sqrt{2}} ( \ket{0} + \ket{1}) & \ket{-} &= \frac{1}{\sqrt{2}} (\ket{0} - \ket{1})
+\end{align*}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Quantum Errors}
+\begin{itemize}
+\item $X$ errors: $X\ket{0} = \ket{1}, X\ket{1} = \ket{0}$ \pause
+\item $Z$ errors: $Z\ket{0} = \ket{0}, Z\ket{1} = -\ket{1}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{No-Cloning}
+There does not exist an operator $U$ such that
+        $$U \ket{\psi} = \ket{\psi} \tensor \ket{\psi}$$
+\end{frame}
+
+\begin{frame}
+\frametitle{Bit Flip Code}
+\begin{description}
+\item[Encoding:]
+        With input state $\ket{\psi} = \alpha \ket{0} + \beta \ket{1}$, encode via
+        $\CNOT (\ket{\psi} \tensor \ket{0}) \tensor \ket{0} = (\alpha \ket{00} + \beta \ket{11}) \tensor \ket{0}$\pause
+\item[Channel:]
+        Applies an $X$ gate to one of the first two qubits with probability $p$. \pause
+
+\item[Syndrome:]
+        First, map the third qubit to $\ket{+}$ by applying an $H$ gate.\\ \pause
+        Detect the syndrome by applying a controlled $ZZ$ gate on the first two qubits controlled by the third.\\ \pause
+        Map the third qubit back to the standard basis by applying another $H$ gate.\\ \pause
+        The syndrome is 0 if no errors are detected, 1 if errors are detected. \pause
+
+\item[Correction:]
+        This code is not capable of correcting errors. \pause
+
+\end{description}
+Notice that this code has (in classical terms) distance 1!
+\end{frame}
+
+\begin{frame}
+\frametitle{Bit Flip Circuit}
+\begin{quantikz}
+\ket{\psi} & \ctrl{1} \slice{Encoding} & \gate[2]{Channel} \slice{}     &       & \gate[2]{Z \tensor Z}      & \slice{Syndrome} &\\
+\ket{0} & \gate{X}      &                       &       &       &       &\\
+\ket{0} &               &                       & \gate{H} & \ctrl{-1} & \gate{H} & \meter{}
+\end{quantikz}
+\end{frame}
+
+\begin{frame}
+\frametitle{Example}
+        $X$-Error detection example.\\ \pause
+        $X$-Error correction example.
+\end{frame}
+
+\begin{frame}
+\frametitle{Conclusion}
+A similar method can be used to correct $Z$-errors (attached file).\\ \pause
+We can extend both of these to correct arbitrary numbers of errors, at the cost of much larger codes.
+\end{frame}
+
+\begin{frame}
+\frametitle{Thank You!}
+
+\nocite{*}
+\printbibliography
+
+\end{frame}
+
+\end{document}
