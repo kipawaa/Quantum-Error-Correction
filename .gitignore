@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__
+makefile
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.log
+*.xml
+*.zi
