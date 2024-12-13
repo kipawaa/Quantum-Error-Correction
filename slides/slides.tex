@@ -6,6 +6,11 @@
 \usepackage{graphicx, caption, subcaption}
 \usepackage{bookmark}
 
+\hypersetup{
+        colorlinks, 
+        urlcolor=blue
+}
+
 \addbibresource{../sources.bib}
 
 \title{Quantum Error Correction and Stabilizer Codes}
@@ -137,11 +142,12 @@ There does not exist an operator $U$ such that
         This code is not capable of correcting errors. \pause
 
 \end{description}
-Notice that this code has (in classical terms) distance 1!
+Notice that this code has (in classical terms) distance 2!\\
+We can detect a single error but correct none since we cannot determine the position of the error.
 \end{frame}
 
 \begin{frame}
-\frametitle{Bit Flip Circuit}
+\frametitle{Bit Flip Detection Circuit}
 \begin{quantikz}
 \ket{\psi} & \ctrl{1} \slice{Encoding} & \gate[2]{Channel} \slice{}     &       & \gate[2]{Z \tensor Z}      & \slice{Syndrome} &\\
 \ket{0} & \gate{X}      &                       &       &       &       &\\
@@ -151,17 +157,18 @@ Notice that this code has (in classical terms) distance 1!
 
 \begin{frame}
 \frametitle{Example}
-        $X$-Error detection example.\\ \pause
-        $X$-Error correction example.
+        \href{https://algassert.com/quirk\#circuit=\%7B\%22cols\%22\%3A\%5B\%5B\%22\%E2\%80\%A2\%22\%2C\%22X\%22\%5D\%2C\%5B\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%5D\%2C\%5B\%22X\%22\%5D\%2C\%5B\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%5D\%2C\%5B1\%2C1\%2C\%22H\%22\%5D\%2C\%5B\%22Z\%22\%2C\%22Z\%22\%2C\%22\%E2\%80\%A2\%22\%5D\%2C\%5B1\%2C1\%2C\%22H\%22\%5D\%5D\%7D}{Bit-Flip Detection Code}\pause
+
+        \href{https://algassert.com/quirk\#circuit=\%7B\%22cols\%22\%3A\%5B\%5B\%22\%E2\%80\%A2\%22\%2C\%22X\%22\%5D\%2C\%5B\%22\%E2\%80\%A2\%22\%2C1\%2C\%22X\%22\%5D\%2C\%5B\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%5D\%2C\%5B\%22X\%22\%5D\%2C\%5B\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%5D\%2C\%5B\%22\%E2\%80\%A2\%22\%2C\%22X\%22\%5D\%2C\%5B\%22\%E2\%80\%A2\%22\%2C1\%2C\%22X\%22\%5D\%2C\%5B\%22X\%22\%2C\%22\%E2\%80\%A2\%22\%2C\%22\%E2\%80\%A2\%22\%5D\%5D\%7D}{Bit-Flip Correction Code}
 \end{frame}
 
 \begin{frame}
 \frametitle{Conclusion}
-A similar method can be used to correct $Z$-errors (attached file).\\ \pause
-We can extend both of these to correct arbitrary numbers of errors, at the cost of much larger codes.
+\href{https://algassert.com/quirk\#circuit=\%7B\%22cols\%22\%3A\%5B\%5B\%22\%E2\%80\%A2\%22\%2C\%22X\%22\%5D\%2C\%5B\%22\%E2\%80\%A2\%22\%2C1\%2C\%22X\%22\%5D\%2C\%5B\%22H\%22\%2C\%22H\%22\%2C\%22H\%22\%5D\%2C\%5B\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%5D\%2C\%5B\%22Z\%22\%5D\%2C\%5B\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%2C\%22\%E2\%80\%A6\%22\%5D\%2C\%5B\%22H\%22\%2C\%22H\%22\%2C\%22H\%22\%5D\%2C\%5B\%22\%E2\%80\%A2\%22\%2C\%22X\%22\%5D\%2C\%5B\%22\%E2\%80\%A2\%22\%2C1\%2C\%22X\%22\%5D\%2C\%5B\%22X\%22\%2C\%22\%E2\%80\%A2\%22\%2C\%22\%E2\%80\%A2\%22\%5D\%5D\%7D}{A similar method} can be used to correct $Z$-errors.\\\pause
+These codes can be combined to correct an arbitrary error, and extended to correct more qubits.
 \end{frame}
 
-\begin{frame}
+\begin{frame}[allowframebreaks]
 \frametitle{Thank You!}
 
 \nocite{*}
