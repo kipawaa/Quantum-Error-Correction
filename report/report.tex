@@ -31,42 +31,43 @@ Finally, we provide Qiskit implementations of these codes that verify their corr
         Classical computing is built from a foundation of bits and logic gates.
         We use bits to represent data, and gates to manipulate that data in order to reach conclusions.
         The systems of quantum computing are quite similar.
-        We represent data via qubits:
-
-        \begin{definition}[Qubit]
+        We represent data via qubits.
+        \begin{definition}
                 A \textit{qubit} is a unit vector $\ket{\psi} \in \bb{C}^2$.
         \end{definition}
 
-        We can more accurately describe an arbitrary qubit with reference to the computational basis:
+        We can more accurately describe an arbitrary qubit with reference to the computational basis.
         
         \begin{notation}[Computational Basis]
                 The \textit{computational basis} of $\bb{C}^n$ is denoted $\{\ket{0}, \dots, \ket{n-1}\}$ where
                         $$\ket{i} = \begin{bmatrix} 0 & \dots & 0 & 1 & 0 & \dots & 0 \end{bmatrix}^T$$
-                with a 1 in the $i-1$th position and 0 elsewhere.\\
+                with a 1 in the $(i-1)$th position and 0 elsewhere.\\
                 Note: Sometimes we write $\ket{3}$ to represent the 4th basis vector, but we often write $\ket{11}$ to represent the fourth basis vector in binary instead.
         \end{notation}
         For example the computational basis of $\bb{C}^2$ is given by
         \begin{align*}
-        \ket{0} &= \begin{bmatrix} 1 \\ 0 \end{bmatrix} & \ket{1} &= \begin{bmatrix} 0 \\ 1 \end{bmatrix}
+        \ket{0} &= \begin{bmatrix} 1 \\ 0 \end{bmatrix}, & \ket{1} &= \begin{bmatrix} 0 \\ 1 \end{bmatrix}.
         \end{align*}
 
         With this basis we can represent an arbitrary qubit as a linear combination of these coefficients:
                 $$\ket{\psi} = \alpha \ket{0} + \beta \ket{1}.$$
 
-        While a single qubit is useful, in order to represent more complex data we'll need a way to combine multiple qubits.
-        This is done via the tensor product:
+        While a single qubit is useful, in order to represent more complex data we need a way to combine multiple qubits.
+        This is done via the tensor product.
 
-        \begin{definition}[Tensor]
-                The tensor product of vectors (not necessarily single qubits) $\ket{\psi} \in \bb{C}^m, \ket{\phi} \in \bb{C}^n$ is denoted
+        \begin{definition}
+                The \textit{tensor product} of vectors (not necessarily single qubits) $\ket{\psi} \in \bb{C}^m, \ket{\phi} \in \bb{C}^n$ is denoted
                         $$\ket{\psi} \tensor \ket{\phi} \in \bb{C}^{mn}.$$
-                It is a bilinear map $\tensor : \bb{C}^m \tensor \bb{C}^n \to \bb{C}^{mn}$, i.e.
+                For the tensor product $\bb{C}^n \tensor \bb{C}^m$ there is an associated bilinear map such that
+                        $$(\ket{\psi}, \ket{\phi}) \mapsto \ket{\psi} \tensor \ket{\phi}$$
+                i.e.
                 $$(\alpha \ket{\psi}) \tensor \ket{\phi} = \alpha (\ket{\psi} \tensor \ket{\phi}) = \ket{\psi} \tensor (\alpha \ket{\phi})$$
                 $$(\ket{\psi} + \ket{\phi}) \tensor \ket{\gamma} = \ket{\psi} \tensor \ket{\gamma} + \ket{\phi} \tensor \ket{\gamma}$$
                 and
                 $$\ket{\psi} \tensor \ket{\phi} = \ket{\phi} \tensor \ket{\psi}.$$
         \end{definition}
 
-        Since the tensor product is a bilinear map, we can specify its action on the basis elements, which defines the action on the entire space by linearity.
+        Understanding the tensor product through this bilinear map, we can specify the action on basis elements, which defines the action on the entire space by bilinearity.
         For example the tensor of basis elements of $\bb{C}^2$ provides a basis for $\bb{C}^4$:
         \begin{align*}
         \ket{0} \tensor \ket{0} &=: \ket{00} & \ket{0} \tensor \ket{1} &=: \ket{01}\\
@@ -78,7 +79,7 @@ Finally, we provide Qiskit implementations of these codes that verify their corr
         As mentioned previously, classical computing operations consist of combinations of logical gates.
         The quantum analogue of these gates are called quantum gates, and are modelled mathematically by unitary operators:
 
-        \begin{definition}[Unitary Operator]
+        \begin{definition}
                 A \textit{unitary operator} $U$ is a linear operator that satisfies
                         $$U^* U = UU^* = I$$
                 where $U^*$ denotes the adjoint (conjugate transpose in our context) of $U$.
@@ -88,7 +89,7 @@ Finally, we provide Qiskit implementations of these codes that verify their corr
         \begin{align*}
                 X \ket{0} &= \ket{1} & X \ket{1} &= \ket{0}
         \end{align*}
-        Notice that since these are linear operators on a vector space with a specified basis, there exist matrix representations for these operators.
+        Since these are linear operators on a vector space with a specified basis, there exist matrix representations for these operators.
         Continuing with the $X$ gate example, we have matrix representation
         \begin{align*}
         X &= \begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}
@@ -110,24 +111,24 @@ Finally, we provide Qiskit implementations of these codes that verify their corr
 
         Though an arbitrary gate may not be a pure tensor product of single qubit gates, it must be a linear combination of $I, X, Z, XZ$ gates.
         These gates form a basis for the space of single qubit operators, and hence linear combinations of their tensors forms a basis for any space of $n$-qubit gates.
-        This will be a key observation that informs how we approach error correction.
+        This is a key observation that informs how we approach error correction.
 
 \section{Quantum Errors}
 
         In classical computation, errors can occur only as ``bit-flips.''
-        In quantum computing, there is an analagous error:
-        \begin{definition}[Bit-Flip Error]
+        In quantum computing, there is an analagous error.
+        \begin{definition}
                 A \textit{bit-flip error} on a general qubit $\ket{\psi}$ is given by
                 \begin{align*}
                 X \ket{\psi} &= X(\alpha \ket{0} + \beta \ket{1})\\
                 &= \alpha X \ket{0} + \beta X \ket{1}\\
-                &= \alpha \ket{1} + \beta \ket{0}
+                &= \alpha \ket{1} + \beta \ket{0}.
                 \end{align*}
         \end{definition}
 
         Unfortunately, this is not the only type of error in quantum computing.
         The second type of error is the phase flip error:
-        \begin{definition}[Phase Flip Error]
+        \begin{definition}
                 A \textit{phase flip error} on a general qubit $\ket{\psi}$ is given by
                 \begin{align*}
                 Z \ket{\psi} &= Z(\alpha \ket{0} + \beta \ket{1})\\
@@ -147,12 +148,12 @@ Finally, we provide Qiskit implementations of these codes that verify their corr
         \end{theorem}
         This was shown by James Park in 1970 \cite{Park}.
         This result means that classical techniques that involve the duplication of data (ex. repetition codes) are not possible to implement in a quantum setting.
-        Despite that, as we will see in the following section, it is still possible to preserve protect quantum information over noisy channels.
+        Despite that, as we see in the following section, it is still possible to preserve protect quantum information over noisy channels.
 
 
 \section{Stabilizer Codes}
 
-        With the types of errors we could encounter identified we can now look for methods of detecting and correcting these errors.
+        With an understanding of the types of errors we look for methods of detecting and correcting these errors.
         The primary approach to quantum error correction is via stabilizer codes.
         These codes are in a sense the quantum analogue of the repetition code, aiming to preserve quantum information by sharing it across multiple qubits, whose errors can be individually corrected in order to reconstruct the original state.
         The name ``stabilizer'' comes from viewing the set of possible errors as a group generated by products of the $X, Z$ Pauli gates.
@@ -294,7 +295,7 @@ Finally, we provide Qiskit implementations of these codes that verify their corr
         \hline
         $H$ & $\frac{1}{\sqrt{2}} \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix}$ & $H\ket{0} = \ket{+} := \frac{1}{\sqrt{2}} (\ket{0} + \ket{1})$ & $H \ket{1} = \ket{-} := \frac{1}{\sqrt{2}} (\ket{0} - \ket{1})$\T{4}\B{-3}\\
         \hline
-        $\CNOT$ & $\begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 1 & 0 \end{bmatrix}$ & {$\begin{aligned} \CNOT \ket{00} = \ket{01} \\ \CNOT \ket{01} = \ket{01}\end{aligned}$} & {$\begin{aligned} \CNOT \ket{10} = \ket{11} \\ \CNOT \ket{11} = \ket{10} \end{aligned}$} \T{7}\B{-6}\\
+        $\CNOT$ & $\begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 1 & 0 \end{bmatrix}$ & {$\begin{aligned} \CNOT \ket{00} = \ket{00} \\ \CNOT \ket{01} = \ket{01}\end{aligned}$} & {$\begin{aligned} \CNOT \ket{10} = \ket{11} \\ \CNOT \ket{11} = \ket{10} \end{aligned}$} \T{7}\B{-6}\\
         \hline
         \end{tabular}
 
