@@ -57,17 +57,13 @@ Finally, we provide Qiskit implementations of these codes that verify their corr
 
         \begin{definition}
                 The \textit{tensor product} of vectors (not necessarily single qubits) $\ket{\psi} \in \bb{C}^m, \ket{\phi} \in \bb{C}^n$ is denoted
-                        $$\ket{\psi} \tensor \ket{\phi} \in \bb{C}^{mn}.$$
-                For the tensor product $\bb{C}^n \tensor \bb{C}^m$ there is an associated bilinear map such that
-                        $$(\ket{\psi}, \ket{\phi}) \mapsto \ket{\psi} \tensor \ket{\phi}$$
-                i.e.
+                        $$\ket{\psi} \tensor \ket{\phi} \in \bb{C}^m \tensor \bb{C}^n \iso \bb{C}^{mn}.$$
+                This satisfies the following properties:
                 $$(\alpha \ket{\psi}) \tensor \ket{\phi} = \alpha (\ket{\psi} \tensor \ket{\phi}) = \ket{\psi} \tensor (\alpha \ket{\phi})$$
-                $$(\ket{\psi} + \ket{\phi}) \tensor \ket{\gamma} = \ket{\psi} \tensor \ket{\gamma} + \ket{\phi} \tensor \ket{\gamma}$$
-                and
-                $$\ket{\psi} \tensor \ket{\phi} = \ket{\phi} \tensor \ket{\psi}.$$
+                $$(\ket{\psi} + \ket{\phi}) \tensor \ket{\gamma} = \ket{\psi} \tensor \ket{\gamma} + \ket{\phi} \tensor \ket{\gamma}.$$
         \end{definition}
 
-        Understanding the tensor product through this bilinear map, we can specify the action on basis elements, which defines the action on the entire space by bilinearity.
+        Thanks to these properties we can specify the action on basis elements, which defines the action on the entire space.
         For example the tensor of basis elements of $\bb{C}^2$ provides a basis for $\bb{C}^4$:
         \begin{align*}
         \ket{0} \tensor \ket{0} &=: \ket{00} & \ket{0} \tensor \ket{1} &=: \ket{01}\\
