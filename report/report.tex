@@ -1,6 +1,6 @@
 \documentclass{article}
 
-\usepackage{kip-math, kip-quantum, mathtools, array}
+\usepackage{kip-math, kip-quantum, kip-thm, mathtools, array}
 \usepackage{geometry, enumerate}
 \usepackage[backend=biber]{biblatex}
 \usepackage{graphicx, caption, subcaption}
@@ -23,7 +23,7 @@ Since then, the difficulty has been to construct a quantum computer sufficiently
 One key factor to enabling these algorithms is to adequately correct errors that accumulate during quantum computation.
 
 This report presents stabilizer codes - quantum error correcting codes based in subspace correction.
-We discuss bit-flip and phase flip errors, justify that correcting these errors is sufficient for correcting arbitray errors, and provide codes capable of correcting each of these.
+We discuss bit-flip and phase flip errors, justify that correcting these errors is sufficient for correcting arbitrary errors, and provide codes capable of correcting each of these.
 Finally, we provide Qiskit implementations of these codes that verify their correctness and feasibility.
 
 \section{Quantum Computing}
